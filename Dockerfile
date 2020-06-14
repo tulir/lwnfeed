@@ -3,7 +3,8 @@ FROM golang:1-alpine AS builder
 RUN apk add --no-cache ca-certificates
 WORKDIR /build/lwnfeed
 COPY . /build/lwnfeed
-RUN go build -o /usr/bin/lwnfeed
+ENV CGO_ENABLED=0
+RUN go build -ldflags "-X 'main.BuildTime=`date -u +'%Y-%m-%dT%H:%M:%S+00:00'`'" -o /usr/bin/lwnfeed
 
 FROM scratch
 
