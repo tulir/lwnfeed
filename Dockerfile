@@ -14,4 +14,4 @@ VOLUME /data
 
 WORKDIR /data
 ENTRYPOINT ["/usr/bin/lwnfeed", "-f", "/data/lwnfeed.cookie.gob"]
-CMD ["start", "-c", "/data/lwnfeed.cache.gob"]
+CMD ["start", "-l", ":8080", "-c", "/data/lwnfeed.cache.gob"]
