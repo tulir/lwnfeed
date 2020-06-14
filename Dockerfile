@@ -13,5 +13,5 @@ COPY --from=builder /usr/bin/lwnfeed /usr/bin/lwnfeed
 VOLUME /data
 
 WORKDIR /data
-ENTRYPOINT ["/usr/bin/lwnfeed", "-f", "/data/lwnfeed.cookie.gob"]
-CMD ["start", "-l", ":8080", "-c", "/data/lwnfeed.cache.gob"]
+ENTRYPOINT ["/usr/bin/lwnfeed", "-f", "/data/cookie.gob"]
+CMD ["start", "-l", ":8080", "-c", "/data/cache.gob"]
