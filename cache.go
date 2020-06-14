@@ -45,8 +45,8 @@ func readCache(path string) error {
 		return errors.Wrap(err, "failed to open file")
 	}
 	dec := gob.NewDecoder(file)
-	var cacheItem CacheItem
 	for {
+		var cacheItem CacheItem
 		err := dec.Decode(&cacheItem)
 		if err == io.EOF {
 			break
