@@ -66,7 +66,7 @@ func updateFeed() error {
 	for _, inputItem := range inputFeed.Items {
 		outputItem, err := handleInputFeedItem(inputItem)
 		if err != nil {
-			log.Warnln("Failed to handle item", inputItem.Link)
+			log.Warnfln("Failed to handle item %s: %v", inputItem.Link, err)
 			continue
 		}
 		outputItems[ptr] = outputItem
