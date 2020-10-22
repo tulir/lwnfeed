@@ -17,6 +17,7 @@
 package main
 
 import (
+	"net/http"
 	"sync"
 	"time"
 
@@ -76,4 +77,23 @@ func updateFeed() error {
 	feed.Updated = time.Now()
 	log.Infoln("Feed updated with", len(feed.Items), "items")
 	return nil
+}
+
+func updateCookies(resp *http.Response) {
+	var authCookie *http.Cookie
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name == "LWNSession1" {
+			authCookie = cookie
+		}
+	}
+	if authCookie == nil {
+		return
+	}
+
+	client.Jar.SetCookies(rootURL, []*http.Cookie{authCookie})
+
+	err := saveCookies(authCookie, ctx.Path("file"))
+	if err != nil {
+		log.Warnfln("Failed to save updated cookies: %v", err)
+	}
 }

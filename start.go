@@ -17,6 +17,9 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/urfave/cli/v2"
 	log "maunium.net/go/maulogger/v2"
 )
