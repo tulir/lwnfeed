@@ -45,6 +45,7 @@ func loadArticleContent(id int) (*feeds.Item, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch article")
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("unexpected response status %d", resp.StatusCode)
 	}

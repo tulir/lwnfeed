@@ -84,6 +84,7 @@ func login(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("failed to log in: login responded %s", resp.Status)
 	}
@@ -105,6 +106,7 @@ func login(ctx *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		defer resp.Body.Close()
 		if resp.StatusCode >= 400 {
 			return fmt.Errorf("failed to log in: login redirect responded %s", resp.Status)
 		}

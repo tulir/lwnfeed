@@ -55,6 +55,7 @@ func updateFeed() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to fetch feed")
 	}
+	defer resp.Body.Close()
 	inputFeed, err := gofeed.NewParser().Parse(resp.Body)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse feed")
