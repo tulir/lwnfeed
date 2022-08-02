@@ -1,5 +1,5 @@
 // lwnfeed - A full-text RSS feed generator for LWN.net.
-// Copyright (C) 2020 Tulir Asokan
+// Copyright (C) 2020-2022 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -17,12 +17,12 @@
 package main
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/gorilla/feeds"
 	"github.com/mmcdole/gofeed"
-	"github.com/pkg/errors"
 	log "maunium.net/go/maulogger/v2"
 )
 
@@ -53,12 +53,12 @@ func updateFeed() error {
 	log.Infoln("Updating feed from LWN.net...")
 	resp, err := client.Get(feedURL.String())
 	if err != nil {
-		return errors.Wrap(err, "failed to fetch feed")
+		return fmt.Errorf("failed to fetch feed: %w", err)
 	}
 	defer resp.Body.Close()
 	inputFeed, err := gofeed.NewParser().Parse(resp.Body)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse feed")
+		return fmt.Errorf("failed to parse feed: %w", err)
 	}
 	log.Debugln("Received feed with", len(inputFeed.Items), "items, fetching items...")
 

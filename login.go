@@ -1,5 +1,5 @@
 // lwnfeed - A full-text RSS feed generator for LWN.net.
-// Copyright (C) 2020 Tulir Asokan
+// Copyright (C) 2020-2022 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -17,12 +17,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/manifoldco/promptui"
-	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 )
 
@@ -57,6 +57,50 @@ func noRedirect(_ *http.Request, _ []*http.Request) error {
 	return http.ErrUseLastResponse
 }
 
+func doLogin(username, password string) (*http.Cookie, error) {
+	client.CheckRedirect = noRedirect
+	resp, err := client.PostForm(loginURL.String(), url.Values{
+		"Username": []string{username},
+		"Password": []string{password},
+		"target":   []string{""},
+		"submit":   []string{"Log+in"},
+	})
+	client.CheckRedirect = nil
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("login responded %s", resp.Status)
+	}
+
+	var authCookie *http.Cookie
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name == "LWNSession1" {
+			authCookie = cookie
+		}
+	}
+	if authCookie == nil {
+		return nil, fmt.Errorf("login response did not contain LWNSession1 cookie")
+	}
+
+	client.Jar.SetCookies(rootURL, []*http.Cookie{authCookie})
+
+	if resp.StatusCode >= 300 {
+		resp, err = client.Get(resp.Header.Get("Location"))
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode >= 400 {
+			return nil, fmt.Errorf("login redirect responded %s", resp.Status)
+		}
+		return authCookie, nil
+	} else {
+		return authCookie, fmt.Errorf("login response didn't respond with redirect (status: %d)", resp.StatusCode)
+	}
+}
+
 func login(ctx *cli.Context) error {
 	username := ctx.String("username")
 	password := ctx.String("password")
@@ -73,46 +117,11 @@ func login(ctx *cli.Context) error {
 			return err
 		}
 	}
-	client.CheckRedirect = noRedirect
-	resp, err := client.PostForm(loginURL.String(), url.Values{
-		"Username": []string{username},
-		"Password": []string{password},
-		"target":   []string{""},
-		"submit":   []string{"Log+in"},
-	})
-	client.CheckRedirect = nil
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("failed to log in: login responded %s", resp.Status)
-	}
-
-	var authCookie *http.Cookie
-	for _, cookie := range resp.Cookies() {
-		if cookie.Name == "LWNSession1" {
-			authCookie = cookie
-		}
-	}
+	authCookie, err := doLogin(username, password)
 	if authCookie == nil {
-		return fmt.Errorf("failed to log in: login response did not contain LWNSession1 cookie")
-	}
-
-	client.Jar.SetCookies(rootURL, []*http.Cookie{authCookie})
-
-	if resp.StatusCode >= 300 {
-		resp, err = client.Get(resp.Header.Get("Location"))
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode >= 400 {
-			return fmt.Errorf("failed to log in: login redirect responded %s", resp.Status)
-		}
-	} else {
-		fmt.Println(resp.Status)
-		fmt.Println("Warning: login response didn't respond with redirect")
+		return fmt.Errorf("failed to login: %w", err)
+	} else if err != nil {
+		fmt.Printf("Warning: %v\n", err)
 	}
 
 	err = saveCookies(authCookie, ctx.Path("file"))

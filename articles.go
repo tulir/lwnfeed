@@ -1,5 +1,5 @@
 // lwnfeed - A full-text RSS feed generator for LWN.net.
-// Copyright (C) 2020 Tulir Asokan
+// Copyright (C) 2020-2022 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -17,6 +17,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -25,7 +26,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gorilla/feeds"
 	"github.com/mmcdole/gofeed"
-	"github.com/pkg/errors"
 	log "maunium.net/go/maulogger/v2"
 )
 
@@ -38,12 +38,12 @@ func loadArticleContent(id int) (*feeds.Item, error) {
 	log.Debugfln("Loading content of article %d from LWN.net", id)
 	link, err := url.Parse(fmt.Sprintf("https://lwn.net/Articles/%d/", id))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse URL")
+		return nil, fmt.Errorf("failed to parse URL: %w", err)
 	}
 
 	resp, err := client.Get(link.String())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to fetch article")
+		return nil, fmt.Errorf("failed to fetch article: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 {
@@ -52,13 +52,13 @@ func loadArticleContent(id int) (*feeds.Item, error) {
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse article HTML")
+		return nil, fmt.Errorf("failed to parse article HTML: %w", err)
 	}
 
 	title := doc.Find(".PageHeadline > h1").Text()
 	body, err := doc.Find(".ArticleText").Html()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get article body")
+		return nil, fmt.Errorf("failed to get article body: %w", err)
 	}
 
 	log.Infofln("Successfully loaded content of article %d", id)
@@ -90,9 +90,11 @@ func handleInputFeedItem(input *gofeed.Item) (*feeds.Item, error) {
 	}
 	output.Description = input.Description
 	output.Created = *input.PublishedParsed
-	output.Author = &feeds.Author{
-		Name:  input.Author.Name,
-		Email: input.Author.Email,
+	if len(input.Authors) > 0 {
+		output.Author = &feeds.Author{
+			Name:  input.Authors[0].Name,
+			Email: input.Authors[0].Email,
+		}
 	}
 	addToCache(id, output)
 	return output, nil

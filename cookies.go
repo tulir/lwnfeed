@@ -1,5 +1,5 @@
 // lwnfeed - A full-text RSS feed generator for LWN.net.
-// Copyright (C) 2020 Tulir Asokan
+// Copyright (C) 2020-2022 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -18,26 +18,26 @@ package main
 
 import (
 	"encoding/gob"
+	"fmt"
 	"net/http"
 	"os"
 
-	"github.com/pkg/errors"
 	log "maunium.net/go/maulogger/v2"
 )
 
 func saveCookies(cookie *http.Cookie, path string) error {
 	fileHandle, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
-		return errors.Wrap(err, "failed to open cookie file")
+		return fmt.Errorf("failed to open cookie file: %w", err)
 	}
 	err = gob.NewEncoder(fileHandle).Encode(cookie)
 	if err != nil {
 		_ = fileHandle.Close()
-		return errors.Wrap(err, "failed to write cookie to file")
+		return fmt.Errorf("failed to write cookie to file: %w", err)
 	}
 	err = fileHandle.Close()
 	if err != nil {
-		return errors.Wrap(err, "failed to close cookie file")
+		return fmt.Errorf("failed to close cookie file: %w", err)
 	}
 	return nil
 }
@@ -46,12 +46,12 @@ func loadCookies(path string) error {
 	log.Debugln("Reading cookies from", path)
 	fileHandle, err := os.Open(path)
 	if err != nil {
-		return errors.Wrap(err, "failed to open cookie file")
+		return fmt.Errorf("failed to open cookie file: %w", err)
 	}
 	var cookie http.Cookie
 	err = gob.NewDecoder(fileHandle).Decode(&cookie)
 	if err != nil {
-		return errors.Wrap(err, "failed to read cookie from file")
+		return fmt.Errorf("failed to read cookie from file: %w", err)
 	}
 	client.Jar.SetCookies(rootURL, []*http.Cookie{&cookie})
 	_ = fileHandle.Close()

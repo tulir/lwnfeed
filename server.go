@@ -1,5 +1,5 @@
 // lwnfeed - A full-text RSS feed generator for LWN.net.
-// Copyright (C) 2020 Tulir Asokan
+// Copyright (C) 2020-2022 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -34,7 +34,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusMethodNotAllowed)
 		return
 	}
-	if time.Now().Sub(feed.Updated) > maxUpdateInterval {
+	if time.Since(feed.Updated) > maxUpdateInterval {
 		log.Debugln("Cached feed is over 30 minutes old, starting update")
 		err := updateFeed()
 		if err != nil {

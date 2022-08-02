@@ -1,5 +1,5 @@
 // lwnfeed - A full-text RSS feed generator for LWN.net.
-// Copyright (C) 2020 Tulir Asokan
+// Copyright (C) 2020-2022 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	Version   = "0.1.0"
+	Version   = "0.2.0"
 	BuildTime string
 
 	parsedBuildTime  time.Time
@@ -40,7 +40,7 @@ var (
 	loginURL *url.URL
 	feedURL  *url.URL
 )
-var client http.Client
+var client = http.Client{Timeout: 1 * time.Minute}
 
 func main() {
 	cli.VersionFlag.(*cli.BoolFlag).Aliases = []string{"V"}
@@ -60,12 +60,8 @@ func main() {
 			Value:   filepath.Join(workingDirectory, "lwnfeed.cookie.gob"),
 		}},
 
-		Compiled: parsedBuildTime,
-		Copyright: `lwnfeed  Copyright (C) 2020  Tulir Asokan
-
-   This program comes with ABSOLUTELY NO WARRANTY.
-   This is free software, and you are welcome to redistribute it
-   under certain conditions; type ` + "`lwnfeed license`" + ` for details.`,
+		Compiled:  parsedBuildTime,
+		Copyright: licenseSmallHeader,
 
 		HideHelpCommand:        true,
 		UseShortOptionHandling: true,

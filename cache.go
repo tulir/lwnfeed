@@ -1,5 +1,5 @@
 // lwnfeed - A full-text RSS feed generator for LWN.net.
-// Copyright (C) 2020 Tulir Asokan
+// Copyright (C) 2020-2022 Tulir Asokan
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -18,11 +18,11 @@ package main
 
 import (
 	"encoding/gob"
+	"fmt"
 	"io"
 	"os"
 
 	"github.com/gorilla/feeds"
-	"github.com/pkg/errors"
 	log "maunium.net/go/maulogger/v2"
 )
 
@@ -42,16 +42,16 @@ func readCache(path string) error {
 		if os.IsNotExist(err) {
 			return nil
 		}
-		return errors.Wrap(err, "failed to open file")
+		return fmt.Errorf("failed to open file: %w", err)
 	}
 	dec := gob.NewDecoder(file)
 	for {
 		var cacheItem CacheItem
-		err := dec.Decode(&cacheItem)
+		err = dec.Decode(&cacheItem)
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return errors.Wrap(err, "error decoding item")
+			return fmt.Errorf("error decoding item: %w", err)
 		}
 		cachedArticles[cacheItem.ID] = cacheItem.Item
 	}
