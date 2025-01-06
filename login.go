@@ -60,10 +60,10 @@ func noRedirect(_ *http.Request, _ []*http.Request) error {
 func doLogin(username, password string) (*http.Cookie, error) {
 	client.CheckRedirect = noRedirect
 	resp, err := client.PostForm(loginURL.String(), url.Values{
-		"Username": []string{username},
-		"Password": []string{password},
-		"target":   []string{""},
-		"submit":   []string{"Log+in"},
+		"uname":  []string{username},
+		"pword":  []string{password},
+		"target": []string{""},
+		"submit": []string{"Log+in"},
 	})
 	client.CheckRedirect = nil
 	if err != nil {
