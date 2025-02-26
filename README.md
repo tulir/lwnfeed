@@ -1,3 +1,7 @@
+# DEPRECATED
+LWN has implemented native full-text RSS feeds for subscribers,
+so this project is no longer necessary: <https://lwn.net/Articles/1011830/>
+
 # lwnfeed
 lwnfeed is a simple daemon that creates a full-text RSS feed from lwn.net by
 scraping the content from the website.
